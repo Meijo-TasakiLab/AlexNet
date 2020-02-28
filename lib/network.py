@@ -160,7 +160,7 @@ class AlexNet(object):
 			print("AlexNet の ぼうけん（損失関数の山下り）は これで おわってしまった！！")
 			print("死因: メモリが足りません。")
 			print("モデルの状態を退避しています...")
-			self.model.save_weights(os.path.join(self.config.LOGDIR, "ynete-ree.h5"))
+			self.model.save_weights(os.path.join(self.config.LOGDIR, "alex-ree.h5"))
 			raise
 
 		return history
