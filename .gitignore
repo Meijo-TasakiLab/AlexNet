@@ -1,0 +1,6 @@
+*.pyc
+/logs
+/logs.old
+dataset_test/*
+dataset_train/*
+dataset_val/*
