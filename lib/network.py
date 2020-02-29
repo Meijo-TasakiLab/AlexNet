@@ -89,37 +89,65 @@ class AlexNet(object):
 		# 入力解像度
 		res = self.config.RESOLUTION
 
-		model = keras.models.Sequential()
+		# Sequential モデルインスタンス（層を重ねるだけでネットワークができます）を初期化します。
+		# AlexNet は5つの畳み込み層と3つの全結合層から構成されます。
+		# 畳み込みにより入力画像がもつ特徴（浅い層では縦線や横線、深い層では目や耳、顔など）が抽出されていきます。
+		# 全結合層は畳み込み層が出力した特徴量を基に判断を下します。
+		model = keras.models.Sequential([
+			# Stage 1. 入力層 1回目の畳み込み
+			# 96 は層が生成する特徴の種類です。11は一度にどのくらいの範囲（ピクセル数）を見るかです。
+			keras.layers.Conv2D(96, 11, strides=4, bias_initializer='zeros', input_shape=(res, res, 3)),
 
-		# 第1畳み込み層
-		model.add(keras.layers.Conv2D(96, 11, strides=4, bias_initializer='zeros', input_shape=(res, res, 3)))
-		model.add(keras.layers.MaxPooling2D(pool_size=3, strides=2))
-		model.add(keras.layers.BatchNormalization())
-		model.add(keras.layers.ReLU())
+			# このままだと解像度が大きすぎるため特徴マップを小さくします。
+			keras.layers.MaxPooling2D(pool_size=3, strides=2),
 
-		# 第2畳み込み層
-		model.add(keras.layers.Conv2D(256, 5, bias_initializer='ones'))
-		model.add(keras.layers.MaxPooling2D(pool_size=3, strides=2))
-		model.add(keras.layers.BatchNormalization())
-		model.add(keras.layers.ReLU())
+			# Batch Normalization は過学習（特定のデータに適合しすぎること）を防いだり精度を上げたりする効果があります。
+			# 本実装では本家 AlexNet の Local Responce Normalization の代わりに用いています。
+			keras.layers.BatchNormalization(),
 
-		# 第3-5畳み込み層
-		model.add(keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='zeros'))
-		model.add(keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='ones'))
-		model.add(keras.layers.Conv2D(256, 3, bias_initializer='ones'))
-		model.add(keras.layers.MaxPooling2D(pool_size=3, strides=2))
-		model.add(keras.layers.BatchNormalization())
-		model.add(keras.layers.ReLU())
+			# モデルに非線形性をもたせます。
+			# 非線形にすることでより複雑な関数を近似することができます。
+			keras.layers.ReLU(),
 
-		# 全結合層
-		model.add(keras.layers.Flatten())
-		model.add(keras.layers.Dense(4096, activation='relu'))
-		model.add(keras.layers.Dropout(0.5))
-		model.add(keras.layers.Dense(4096, activation='relu'))
-		model.add(keras.layers.Dropout(0.5))
+			# Stage 2. 隠れ層 2回目の畳み込み
+			keras.layers.Conv2D(256, 5, bias_initializer='ones'),
+			keras.layers.MaxPooling2D(pool_size=3, strides=2),
+			keras.layers.BatchNormalization(),
+			keras.layers.ReLU(),
 
-		# 出力層
-		model.add(keras.layers.Dense(len(self.config.CLASSES), activation='softmax'))
+			# Stage 3. 隠れ層 3回目の畳み込み
+			keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='zeros'),
+
+			# Stage 4. 隠れ層 4回目の畳み込み
+			keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='ones'),
+
+			# Stage 5. 隠れ層 5回目の畳み込み
+			keras.layers.Conv2D(256, 3, bias_initializer='ones'),
+			keras.layers.MaxPooling2D(pool_size=3, strides=2),
+			keras.layers.BatchNormalization(),
+			keras.layers.ReLU(),
+
+			# Stage 6. 隠れ層 1回目の全結合層
+			# このままだとテンソルの形が異なるため、全結合層で処理できるように変形します。
+			keras.layers.Flatten(),
+
+			# これは4096個のニューロンが前後の層と互いに接続された全結合層です。
+			keras.layers.Dense(4096, activation='relu'),
+
+			# ニューロンの多い全結合層はしばしば過学習を起こします。
+			# 過学習は特定のニューロンに依存しすぎることで起きると言われています。
+			# それを防ぐために50%の確率でランダムにニューロンを無かったことにします。
+			keras.layers.Dropout(0.5),
+
+			# Stage 7. 隠れ層 2回目の全結合層
+			keras.layers.Dense(4096, activation='relu'),
+			keras.layers.Dropout(0.5),
+
+			# Stage 8. 出力層 3回目の全結合層
+			# 分類すべきクラス数分のニューロンを用意します。
+			# 最後の softmax 関数による活性化でどのニューロンがもっとも強く反応しているかを求めます。
+			keras.layers.Dense(len(self.config.CLASSES), activation='softmax')
+		], name="AlexNet")
 
 		model.summary()
 		model.compile(loss=loss, metrics=['accuracy'], optimizer=optimizer)
