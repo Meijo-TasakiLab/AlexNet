@@ -19,6 +19,9 @@ REVISION = 1
 class AlexNet(object):
 	"""
 	突貫工事の AlexNet
+	
+	Alex Krizhevsky, Ilya Sutskever, Geoffrey E. Hinton: ImageNet Classification with Deep Convolutional Neural Networks
+	https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf
 	"""
 
 	def __init__(self, config=None):
@@ -50,17 +53,24 @@ class AlexNet(object):
 		"""
 
 		# メモリ節約
+		# 何も指定しないと TensorFlow は利用可能な全メモリを専有しようとします。
+		# このオプションにより必要最小限のメモリを使うようになります。
 		config = tf.ConfigProto()
 		config.gpu_options.allow_growth = True
 		session = tf.Session(config=config)
 		keras.backend.set_session(session)
 
 		# オプティマイザ
+		# オプティマイザは損失関数が小さくなる方向にモデルを導きます。
 		opt = self.config.OPTIMIZER
-		lr = self.config.LEARNING_RATE
+		lr = self.config.LEARNING_RATE # パラメータ更新の大きさ
 		if opt == "SGD":
+			# SGD; Stochastic Gradient Decent （確率的勾配降下法）は古典的なオプティマイザです。
 			optimizer = keras.optimizers.SGD(lr=lr, momentum=self.config.MOMENTUM, nesterov=self.config.USE_NESTEROV)
 		elif opt == "Adam":
+			# Adam は SGD と RMSProp を組み合わせた収束の速いオプティマイザです。
+			# Nadam は Nesterov Accelerated Gradient (NAG) と RMSProp を組み合わせたオプティマイザです。
+			# 本実装では設定を変えない限り Nadam が使われます。
 			if self.config.USE_NESTEROV:
 				optimizer = keras.optimizers.Nadam(lr=lr)
 			else:
@@ -69,6 +79,8 @@ class AlexNet(object):
 			raise ValueError("オプティマイザが変です。")
 
 		# 損失関数
+		# 損失関数は現在のモデルの状態と理想的なモデルの状態との距離を現します。
+		# 損失関数が小さくなるように訓練が進みます。
 		if len(self.config.CLASSES) > 2:
 			loss = 'categorical_crossentropy' # 多値分類
 		else:
