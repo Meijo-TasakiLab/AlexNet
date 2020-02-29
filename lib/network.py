@@ -102,7 +102,7 @@ class AlexNet(object):
 			keras.layers.MaxPooling2D(pool_size=3, strides=2),
 
 			# Batch Normalization は過学習（特定のデータに適合しすぎること）を防いだり精度を上げたりする効果があります。
-			# 本実装では本家 AlexNet の Local Responce Normalization の代わりに用いています。
+			# 本実装では本家 AlexNet の Local Response Normalization の代わりに用いています。
 			keras.layers.BatchNormalization(),
 
 			# モデルに非線形性をもたせます。
