@@ -42,10 +42,6 @@ class DefaultConfig():
 		# バッチサイズ
 		self.BATCH_SIZE = 32
 
-		# Batch Normalization するか
-		# 無効化するとメモリ消費量を減らせますがかなり精度が落ちます。
-		self.USE_BN = True
-
 		# クラス分類
 		# 分類すべきクラスを設定します。このままだとエラーになるため、データセットに合わせて必ず再設定してください。
 		self.CLASSES = None
