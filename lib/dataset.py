@@ -57,7 +57,6 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		else:
 			raise ValueError("Generator のモードが変です。")
 
-
 	def __getitem__(self, idx):
 		"""
 		1バッチを返します。
@@ -74,7 +73,7 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		y = np.zeros([bs, len(self.classes)], dtype=np.bool)
 
 		for i in range(bs):
-			index = idx * bs + i
+			index = (idx * bs + i) % len(self.data_x)
 			temp = self.data_x[index]
 
 			if self.what == "mnist":
@@ -94,7 +93,6 @@ class DefaultDataGenerator(keras.utils.Sequence):
 
 		return x, y
 
-
 	def __len__(self):
 		"""
 		1エポックを構成するバッチの個数を返します。
@@ -103,14 +101,13 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		@return (int): 1エポックを構成するバッチの個数
 		"""
 
-		return self.data_x.shape[0] // self.config.BATCH_SIZE
+		return int(np.ceil(self.data_x.shape[0] / self.config.BATCH_SIZE))
 
 
 class DirectoryBasedDataGenerator(keras.utils.Sequence):
 	"""
 	ディレクトリベースのデータジェネレーターです。fit_generator() 関数に渡してご使用ください。
 	フォルダを作って画像を放り込むだけでデータセットができます。
-
 	"""
 
 	def __init__(self, config=None, root=None, mode="train", length_multiplier=1, extensions=(".jpg", ".png")):
