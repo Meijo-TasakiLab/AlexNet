@@ -49,7 +49,7 @@ class AlexNet(object):
 		AlexNet を生成します。
 
 		@param None (None): [None] この関数は引数がありません。
-		@return model (keras.models.Model): Keras のモデル。
+		@return model (keras.models.Sequential): Keras のモデル。
 		"""
 
 		# メモリ節約
@@ -66,6 +66,7 @@ class AlexNet(object):
 		lr = self.config.LEARNING_RATE # パラメータ更新の大きさ
 		if opt == "SGD":
 			# SGD; Stochastic Gradient Decent （確率的勾配降下法）は古典的なオプティマイザです。
+			# そのままだと収束が遅いため Nesterov 加速と慣性項を追加しています。
 			optimizer = keras.optimizers.SGD(lr=lr, momentum=self.config.MOMENTUM, nesterov=self.config.USE_NESTEROV)
 		elif opt == "Adam":
 			# Adam は SGD と RMSProp を組み合わせた収束の速いオプティマイザです。
@@ -149,7 +150,10 @@ class AlexNet(object):
 			keras.layers.Dense(len(self.config.CLASSES), activation='softmax')
 		], name="AlexNet")
 
+		# モデルの接続を表示します。
 		model.summary()
+
+		# モデルを使える状態にします。
 		model.compile(loss=loss, metrics=['accuracy'], optimizer=optimizer)
 
 		return model
