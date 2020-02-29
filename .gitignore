@@ -4,3 +4,4 @@
 dataset_test/*
 dataset_train/*
 dataset_val/*
+.vscode/

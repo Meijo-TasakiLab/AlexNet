@@ -29,12 +29,13 @@ PARSER.add_argument('-t', '--train', default=None, type=str, metavar='PATH',
                     help='学習用データセットのディレクトリのパスを入力します．テストのみ行う場合は不要です．(例: "./dataset_train")')
 PARSER.add_argument('-v', '--val', default=None, type=str, metavar='PATH',
                     help='確認用データセットのディレクトリのパスを入力します．(例: "./dataset_val")')
-PARSER.add_argument('-e', '--test', default="./dataset_test", type=str,
-                    metavar='PATH', help='テスト用データセットのディレクトリのパスを入力します．(例: "./dataset_test")')
+PARSER.add_argument('-e', '--test', default=None, type=str,
+                    metavar='PATH', required=True, 
+                    help='テスト用データセットのディレクトリのパスを入力します．(例: "./dataset_test")')
 PARSER.add_argument('-c', '--checkpoint', default=None, type=str,
-                    metavar='****.h5', help='テストに用いるチェックポイントを指定する．チェックポイントの「ファイル名」を入力する．')
+                    metavar='****.h5', help='テストに用いるチェックポイントを指定する．チェックポイントの「ファイル名」を入力します．')
 PARSER.add_argument('-l', '--logdir', default="./logs/test",
-                    type=str, metavar='PATH', help='ログ・チェックポイントの出力先を指定する．')
+                    type=str, metavar='PATH', help='ログ・チェックポイントの出力先を指定します．')
 PARSER.add_argument('--batch-size', default=32, type=int,
                     metavar='N', help='学習時のバッチサイズを設定します．')
 PARSER.add_argument('--epochs', default=10, type=int,

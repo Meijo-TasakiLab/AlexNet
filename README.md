@@ -16,7 +16,7 @@ sudo apt install -y python3-tk
 mkdir ~/virtualenv
 virtualenv --no-site-package -p python3 ~/virtualenv/alexnet
 source ~/virtualenv/alexnet/bin/activate
-pip install imgaug==0.2.9 opencv-python tensorflow-gpu<1.13.0 numpy<1.17.0 glob3 matplotlib
+pip install imgaug==0.2.9 opencv-python tensorflow-gpu==1.12.0 numpy glob3 matplotlib
 ```
 
 ## 実行方法
