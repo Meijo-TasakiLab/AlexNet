@@ -6,7 +6,7 @@
 ## セットアップ
 はじめにこのリポジトリをクローンしてください．
 ```sh
-$ git clone https://github.com/Meijo-TasakiLab/AlexNet...
+$ git clone https://github.com/Meijo-TasakiLab/AlexNet.git
 ```
 **Google Colab を使う場合は以上で終了です．**
 
