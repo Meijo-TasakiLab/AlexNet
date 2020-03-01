@@ -97,57 +97,57 @@ class AlexNet(object):
 		model = keras.models.Sequential([
 			# Stage 1. 入力層 1回目の畳み込み
 			# 96 は層が生成する特徴の種類です。11は一度にどのくらいの範囲（ピクセル数）を見るかです。
-			keras.layers.Conv2D(96, 11, strides=4, bias_initializer='zeros', input_shape=(res, res, 3)),
+			keras.layers.Conv2D(96, 11, strides=4, bias_initializer='zeros', input_shape=(res, res, 3), name="stage1/conv"),
 
 			# このままだと解像度が大きすぎるため特徴マップを小さくします。
-			keras.layers.MaxPooling2D(pool_size=3, strides=2),
+			keras.layers.MaxPooling2D(pool_size=3, strides=2, name="stage1/pooling"),
 
 			# Batch Normalization は過学習（特定のデータに適合しすぎること）を防いだり精度を上げたりする効果があります。
 			# 本実装では本家 AlexNet の Local Response Normalization の代わりに用いています。
-			keras.layers.BatchNormalization(),
+			keras.layers.BatchNormalization(name="stage1/bn"),
 
 			# モデルに非線形性をもたせます。
 			# 非線形にすることでより複雑な関数を近似することができます。
-			keras.layers.ReLU(),
+			keras.layers.ReLU(name="stage1/activation"),
 
 			# Stage 2. 隠れ層 2回目の畳み込み
-			keras.layers.Conv2D(256, 5, bias_initializer='ones'),
-			keras.layers.MaxPooling2D(pool_size=3, strides=2),
-			keras.layers.BatchNormalization(),
-			keras.layers.ReLU(),
+			keras.layers.Conv2D(256, 5, bias_initializer='ones', name="stage2/conv"),
+			keras.layers.MaxPooling2D(pool_size=3, strides=2, name="stage2/pooling"),
+			keras.layers.BatchNormalization(name="stage2/bn"),
+			keras.layers.ReLU(name="stage2/activation"),
 
 			# Stage 3. 隠れ層 3回目の畳み込み
-			keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='zeros'),
+			keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='zeros', name="stage3/conv"),
 
 			# Stage 4. 隠れ層 4回目の畳み込み
-			keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='ones'),
+			keras.layers.Conv2D(384, 3, activation='relu', bias_initializer='ones', name="stage4/conv"),
 
 			# Stage 5. 隠れ層 5回目の畳み込み
-			keras.layers.Conv2D(256, 3, bias_initializer='ones'),
-			keras.layers.MaxPooling2D(pool_size=3, strides=2),
-			keras.layers.BatchNormalization(),
-			keras.layers.ReLU(),
+			keras.layers.Conv2D(256, 3, bias_initializer='ones', name="stage5/conv"),
+			keras.layers.MaxPooling2D(pool_size=3, strides=2, name="stage5/pooling"),
+			keras.layers.BatchNormalization(name="stage5/bn"),
+			keras.layers.ReLU(name="stage5/activation"),
 
 			# Stage 6. 隠れ層 1回目の全結合層
 			# このままだとテンソルの形が異なるため、全結合層で処理できるように変形します。
-			keras.layers.Flatten(),
+			keras.layers.Flatten(name="stage6/flatten"),
 
 			# これは4096個のニューロンが前後の層と互いに接続された全結合層です。
-			keras.layers.Dense(4096, activation='relu'),
+			keras.layers.Dense(4096, activation='relu', name="stage6/fc"),
 
 			# ニューロンの多い全結合層はしばしば過学習を起こします。
 			# 過学習は特定のニューロンに依存しすぎることで起きると言われています。
 			# それを防ぐために50%の確率でランダムにニューロンを無かったことにします。
-			keras.layers.Dropout(0.5),
+			keras.layers.Dropout(0.5, name="stage6/dropout"),
 
 			# Stage 7. 隠れ層 2回目の全結合層
-			keras.layers.Dense(4096, activation='relu'),
-			keras.layers.Dropout(0.5),
+			keras.layers.Dense(4096, activation='relu', name="stage7/fc"),
+			keras.layers.Dropout(0.5, name="stage7/dropout"),
 
 			# Stage 8. 出力層 3回目の全結合層
 			# 分類すべきクラス数分のニューロンを用意します。
 			# 最後の softmax 関数による活性化でどのニューロンがもっとも強く反応しているかを求めます。
-			keras.layers.Dense(len(self.config.CLASSES), activation='softmax')
+			keras.layers.Dense(len(self.config.CLASSES), activation='softmax', name="stage8/fc")
 		], name="AlexNet")
 
 		# モデルの接続を表示します。
