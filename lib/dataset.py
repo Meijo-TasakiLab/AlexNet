@@ -1,5 +1,5 @@
 """
-AlexNet データセット用モジュールです。
+AlexNet データセットモジュールです。
 """
 
 import os
@@ -28,6 +28,7 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		self.config = config
 		self.mode = mode
 		self.what = what
+		self.batch_size = config.BATCH_SIZE if mode == "train" else 1
 
 		if what == "mnist":
 			print("MNIST データを読み込んでいます...")
@@ -57,22 +58,27 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		else:
 			raise ValueError("Generator のモードが変です。")
 
+
 	def __getitem__(self, idx):
 		"""
 		1バッチを返します。
 
 		@param idx (int): [必須] 0から始まるバッチ番号。
-		@return x (np.float): [バッチサイズ, 224, 224, 3] の MNIST 手書き文字画像または CIFAR-10 画像。
+		@return x (np.float): [バッチサイズ, 解像度, 解像度, 3] の MNIST 手書き文字画像または CIFAR-10 画像。
 		@return y (np.bool): One-hot エンコーディングされたラベル。
 		"""
 
-		bs = self.config.BATCH_SIZE
+		# 長いので略称をつけます。
+		bs = self.batch_size
 		res = self.config.RESOLUTION
 
+		# 入れ物をつくります。
 		x = np.zeros([bs, res, res, 3], dtype=np.uint8)
 		y = np.zeros([bs, len(self.classes)], dtype=np.bool)
 
 		for i in range(bs):
+			# サンプル番号を計算します。
+			# 余りの計算はデータセットがバッチサイズで割り切れなかったときのためです。
 			index = (idx * bs + i) % len(self.data_x)
 			temp = self.data_x[index]
 
@@ -84,14 +90,15 @@ class DefaultDataGenerator(keras.utils.Sequence):
 			x[i] = temp
 			y[i] = keras.utils.to_categorical(self.data_y[index], num_classes=len(self.classes))
 
-		# 水増し。
+		# 過学習を防ぐための水増し。
 		if self.mode == "train":
 			x = self.config.AUGMENTERS.augment_images(x)
 
-		# ネットワークの入力に適した状態にします。
+		# ネットワークの入力に適した状態にします（正規化）。
 		x = x / 255.0
 
 		return x, y
+
 
 	def __len__(self):
 		"""
@@ -101,7 +108,7 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		@return (int): 1エポックを構成するバッチの個数
 		"""
 
-		return int(np.ceil(self.data_x.shape[0] / self.config.BATCH_SIZE))
+		return int(np.ceil(self.data_x.shape[0] / self.batch_size))
 
 
 class DirectoryBasedDataGenerator(keras.utils.Sequence):
@@ -126,6 +133,7 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 
 		self.config = config
 		self.mode = mode
+		self.batch_size = config.BATCH_SIZE if mode == "train" else 1
 		self.data = [] # 各画像へのファイルパスを保持します。
 		self.classes = [] # 各クラス名を保持します。
 		self.class_samples = {} # 各クラスのサンプル数を保持します。
@@ -181,7 +189,7 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 		@return (int): 1エポックを構成するバッチの個数
 		"""
 
-		return int(np.ceil(len(self.data) / self.config.BATCH_SIZE * self.length_multiplier))
+		return int(np.ceil(len(self.data) / self.batch_size * self.length_multiplier))
 
 	def __getitem__(self, idx):
 		"""
@@ -192,19 +200,23 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 		@return y: (np.array) 1バッチ分のラベル。
 		"""
 
-		# 入れ物を作ります。
-		x = np.zeros([self.config.BATCH_SIZE, self.config.RESOLUTION, self.config.RESOLUTION, 3], dtype=np.uint8)
-		y = np.zeros([self.config.BATCH_SIZE, len(self.classes)], dtype=np.bool)
+		# 長いので略称をつけます。
+		bs = self.batch_size
+		res = self.config.RESOLUTION
 
-		for i in range(self.config.BATCH_SIZE):
+		# 入れ物を作ります。
+		x = np.zeros([bs, res, res, 3], dtype=np.uint8)
+		y = np.zeros([bs, len(self.classes)], dtype=np.bool)
+
+		for i in range(bs):
 			# サンプル番号を計算します。
-			# 余りの計算は length_multiplier > 1 および余りが出たときのためです。
-			index = (idx * self.config.BATCH_SIZE + i) % len(self.data)
+			# 余りの計算は length_multiplier > 1 のときとデータセットがバッチサイズで割り切れなかったときのためです。
+			index = (idx * bs + i) % len(self.data)
 
 			# 画像を読みます。
 			data = cv2.imread(self.data[index])
 			data = cv2.cvtColor(data, cv2.COLOR_BGR2RGB)
-			data = cv2.resize(data, (self.config.RESOLUTION, self.config.RESOLUTION), interpolation=cv2.INTER_CUBIC)
+			data = cv2.resize(data, (res, res), interpolation=cv2.INTER_CUBIC)
 
 			# ラベルを読みます。
 			# そのままだと文字列になっていて使えないので、classes に登録された順番（数値）に変換します。
@@ -216,11 +228,11 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 			x[i] = data
 			y[i] = keras.utils.to_categorical(label, num_classes=len(self.classes))
 
-		# 水増し。
+		# 過学習を防ぐための水増し。
 		if self.mode == "train":
 			x = self.config.AUGMENTERS.augment_images(x)
 
-		# ネットワークの入力に適した状態にします。
+		# ネットワークの入力に適した状態にします（正規化）。
 		x = x / 255.0
 
 		return x, y
