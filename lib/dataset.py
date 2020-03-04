@@ -28,20 +28,16 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		self.config = config
 		self.mode = mode
 		self.what = what
-		self.batch_size = config.BATCH_SIZE if mode == "train" else 1
+		self.batch_size = config.BATCH_SIZE
 
 		if what == "mnist":
 			print("MNIST データを読み込んでいます...")
 			(train_x, train_y), (test_x, test_y) = keras.datasets.mnist.load_data()
-
 			self.classes = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
-
 		elif what == "cifar10":
 			print("CIFAR-10 データを読み込んでいます...")
 			(train_x, train_y), (test_x, test_y) = keras.datasets.cifar10.load_data()
-
 			self.classes = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-
 		else:
 			raise ValueError("対応していないデータセットです。")
 
@@ -58,6 +54,18 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		else:
 			raise ValueError("Generator のモードが変です。")
 
+		# データセットが訓練用以外の場合、必ず割り切れるようにバッチサイズを再設定します。
+		# 確認用データセットでは、オーバーラップによる結果の不確定性が許容されません。
+		# バッチサイズを1にしてしまえば話は早いのですが、バリデーション時の Keras のプログレスバーがブワアーーってなります。
+		if self.mode != "train":
+			length = len(self.data_x)
+			while self.batch_size > 1:
+				if length % self.batch_size == 0:
+					break
+				else:
+					self.batch_size -= 1
+			print("バッチサイズが %d に再設定されました。" % self.batch_size)
+
 
 	def __getitem__(self, idx):
 		"""
@@ -72,7 +80,7 @@ class DefaultDataGenerator(keras.utils.Sequence):
 		bs = self.batch_size
 		res = self.config.RESOLUTION
 
-		# 入れ物をつくります。
+		# 入れ物を作ります。
 		x = np.zeros([bs, res, res, 3], dtype=np.uint8)
 		y = np.zeros([bs, len(self.classes)], dtype=np.bool)
 
@@ -133,7 +141,7 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 
 		self.config = config
 		self.mode = mode
-		self.batch_size = config.BATCH_SIZE if mode == "train" else 1
+		self.batch_size = config.BATCH_SIZE
 		self.data = [] # 各画像へのファイルパスを保持します。
 		self.classes = [] # 各クラス名を保持します。
 		self.class_samples = {} # 各クラスのサンプル数を保持します。
@@ -162,8 +170,7 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 
 				self.class_samples[class_name] = samples
 
-		# 最大サンプル数を探します。
-		max_samples = max(self.class_samples.values())
+		print("%d 個のサンプルが見つかりました。" % len(self.data))
 
 		# 再現性をもたせるために順番に並べ替えます。
 		# これがないとデータセットを作るたびにクラスが変わるという悲惨なことが起きます。
@@ -172,6 +179,21 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 		# 一方で data 変数はシャッフルします。
 		# 1バッチ内のサンプルの偏りを減らすためです。
 		random.shuffle(self.data)
+
+		# データセットが訓練用以外の場合、必ず割り切れるようにバッチサイズを再設定します。
+		# 確認および評価用データセットでは、オーバーラップによる結果の不確定性が許容されません。
+		# バッチサイズを1にしてしまえば話は早いのですが、バリデーション時の Keras のプログレスバーがブワアーーってなります。
+		if self.mode != "train":
+			length = len(self.data)
+			while self.batch_size > 1:
+				if length % self.batch_size == 0:
+					break
+				else:
+					self.batch_size -= 1
+			print("バッチサイズが %d に再設定されました。" % self.batch_size)
+
+		# 最大サンプル数を探します。
+		max_samples = max(self.class_samples.values())
 
 		# クラスごとの重みを設定します。
 		for i, c in enumerate(self.classes):
