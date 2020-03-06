@@ -236,7 +236,7 @@ class AlexNet(object):
 		res = self.config.RESOLUTION
 
 		# 入れ物
-		ph_data = np.zeros([1, res, res, 3], dtype=np.float16)
+		ph_data = np.zeros([1, res, res, 3], dtype=np.float)
 
 		# ネットワークの形に合わせます
 		if image.shape[0:2] != [res, res]:
