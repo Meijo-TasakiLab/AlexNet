@@ -139,6 +139,12 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 		@return None (None): この関数は戻り値がありません。
 		"""
 
+		assert config, "設定を指定してください。"
+		assert root, "走査するディレクトリのルートを指定してください。"
+
+		if not os.path.exists(root):
+			raise FileNotFoundError(root)
+
 		self.config = config
 		self.mode = mode
 		self.batch_size = config.BATCH_SIZE
@@ -167,6 +173,8 @@ class DirectoryBasedDataGenerator(keras.utils.Sequence):
 					if ext in self.extensions:
 						self.data.append(os.path.join(current_dir, file))
 						samples += 1
+
+				assert samples > 0, "0 サンプルのクラスは許容されません。"
 
 				self.class_samples[class_name] = samples
 
