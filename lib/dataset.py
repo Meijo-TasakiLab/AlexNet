@@ -8,7 +8,10 @@ import random
 import numpy as np
 import cv2
 
-from tensorflow import keras
+try:
+	from tensorflow.compat.v1 import keras
+except ImportError:
+	from tensorflow import keras
 
 class DefaultDataGenerator(keras.utils.Sequence):
 	"""
