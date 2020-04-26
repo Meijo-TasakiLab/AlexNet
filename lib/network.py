@@ -7,8 +7,12 @@ import os
 import numpy as np
 import cv2
 
-import tensorflow as tf
-from tensorflow import keras
+try:
+	import tensorflow.compat.v1 as tf
+	from tensorflow.compat.v1 import keras
+except ImportError:
+	import tensorflow as tf
+	from tensorflow import keras
 
 # TODO
 assert keras.backend.image_data_format() == 'channels_last', "すまん"
@@ -24,7 +28,7 @@ class AlexNet(object):
 	https://papers.nips.cc/paper/4824-imagenet-classification-with-deep-convolutional-neural-networks.pdf
 	"""
 
-	def __init__(self, config=None):
+	def __init__(self, config):
 		"""
 		AlexNet インスタンスを初期化します。
 
@@ -32,8 +36,8 @@ class AlexNet(object):
 		@return None (None): この関数は戻り値がありません。
 		"""
 
-		assert config, "設定を指定してください。"
-		assert config.CLASSES, "分類すべきクラスが未設定です。"
+		if config.CLASSES is None:
+			raise ValueError("分類すべきクラスが未設定です。")
 
 		self.config = config
 		self.model = self.build()
@@ -51,6 +55,13 @@ class AlexNet(object):
 		@param None (None): [None] この関数は引数がありません。
 		@return model (keras.models.Sequential): Keras のモデル。
 		"""
+
+		# Eager Execution を無効化
+		# 昔ながらの計算グラフ方式で実行します。
+		try:
+			tf.disable_eager_execution()
+		except AttributeError:
+			pass
 
 		# メモリ節約
 		# 何も指定しないと TensorFlow は利用可能な全メモリを専有しようとします。
